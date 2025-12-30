@@ -35,3 +35,11 @@ pip install -r requirements.txt
 $ cp the .env.example file to .env and fill in the values
 ```
 
+
+### Run the application
+
+```bash
+uvicorn src.main:app --reload
+```
+
+
