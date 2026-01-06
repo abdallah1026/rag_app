@@ -1,5 +1,5 @@
 import os
-from helper.config import get_settings
+from ..helper.config import get_settings
 import random
 import string
 
@@ -14,7 +14,7 @@ class BaseController:
 
         self.files_dir = os.path.join(
             self.base_dir,
-            "assets/files
+            "assets/files"
         )
 
     def generate_random_string(self, length: int = 10):

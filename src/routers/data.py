@@ -1,13 +1,14 @@
-from fastapi import FastAPI, APIRouter, Depends, UploadFile, status
+from fastapi import FastAPI, APIRouter, Depends, UploadFile, status,Request
 from fastapi.responses import JSONResponse
 import os
-from helper.config import get_settings
-from controllers import DataController, ProjectController
+from ..models.enums.signalsResponse import ResponseSignals
+from ..helper.config import get_settings, Settings
+from ..controllers import DataController, ProjectController
 import aiofiles
 from .schemes.data import ProcessRequest
 import logging
-from controllers import ProcessController
-
+from ..controllers import ProcessController
+from ..models.project_model import ProjectModel
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -15,7 +16,13 @@ data_router = APIRouter()
 
 
 @data_router.post("/upload/{project_id}")
-async def upload_data(project_id: str, file: UploadFile, app_settings: Settings = Depends(get_settings)):
+async def upload_data(request: Request ,project_id: str, file: UploadFile, app_settings: Settings = Depends(get_settings)):
+
+    project_model = ProjectModel(
+        db_client=request.app.db_client,
+    )
+
+    project =await project_model.get_project_or_create_one(project_id=project_id)
 
     IsValid, status = DataController().validate_uploaded_file(file=file)
 
@@ -53,7 +60,7 @@ async def upload_data(project_id: str, file: UploadFile, app_settings: Settings 
     return JSONResponse( 
         content=
         {"message": ResponseSignals.FILE_UPLOAD_SUCCESS.value,
-        "file_id": file_id
+        "file_id": file_id,
         }
     )
 
@@ -71,7 +78,7 @@ async def process_data(project_id: str, process_request: ProcessRequest):
     file_chunks = process_controller.process_file_content(
         content_file=file_content,
         chunk_size=process_request.chunk_size,
-        overlap_size=process_request.overlap_size
+        overlap_size=process_request.overlap_size,
         file_id=file_id
     )
 
@@ -79,10 +86,10 @@ async def process_data(project_id: str, process_request: ProcessRequest):
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, 
             content=
             {
-                "message": ResponseSignals.FILE_PROCESSING_FAILED.value
+                "message": ResponseSignals.FILE_PROCESS_FAILED.value
             }
         )
-    else: 
+
     return file_chunks
 
 

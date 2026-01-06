@@ -42,4 +42,7 @@ $ cp the .env.example file to .env and fill in the values
 uvicorn src.main:app --reload
 ```
 
-
+### Run Docker First
+```
+    
+```
